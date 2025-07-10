@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="photo_2025-07-10_16-19-54.jpg" type="image/x-icon"> 
-    <title>GoWorkGlobal — Легальная работа за границей</title>
+    <title>GoWork Global — Легальная работа за границей</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
     <style>
         :root {
             --primary: #2563eb;
@@ -205,6 +206,46 @@
             }
         }
         
+        /* Стили для подвала */
+        footer {
+            background-color: var(--secondary);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .telegram-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .telegram-link:hover {
+            transform: scale(1.05);
+        }
+
+        .telegram-icon {
+            width: 50px;
+            height: 50px;
+        }
+
+        .copyright {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
         /* Мобильная адаптация */
         @media (max-width: 768px) {
             section {
@@ -244,7 +285,6 @@
     <header style="padding: 20px; background: white; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100;">
         <div class="container">
             <img src="photo_2025-07-10_16-19-54.jpg" alt="GoWork Global" class="header-logo">
-            GoWorkGlobal
         </div>
     </header>
 
@@ -453,7 +493,92 @@
         </div>
     </section>
 
+    <!-- Подвал -->
+    <footer>
+        <div class="container footer-content">
+            <a href="https://t.me/globalgowork_bot" class="telegram-link" target="_blank">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" class="telegram-icon">
+                Наш Telegram-бот
+            </a>
+            <p class="copyright">© 2025 GoWork Global. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <!-- Подключение библиотеки intl-tel-input -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script>
+        // Инициализация intl-tel-input для поля телефона
+        const phoneInput = document.getElementById('phone');
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: 'ru',
+            utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+            separateDialCode: false,
+            nationalMode: false,
+            autoFormat: true,
+            customPlaceholder: function() {
+                return "+7 (XXX) XXX-XX-XX";
+            },
+        });
+
+        // Обработка формы
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Получаем данные из формы
+            const formData = {
+                full_name: document.getElementById('full-name').value,
+                age: document.getElementById('age').value,
+                citizenship: document.querySelector('input[name="citizenship"]:checked')?.value || 'Не указано',
+                phone: iti.getNumber(),
+                experience: document.getElementById('experience').value,
+                country: document.getElementById('country').value
+            };
+
+            // Проверка обязательных полей
+            if (!formData.full_name || !formData.age || !formData.phone || !formData.experience) {
+                alert('Пожалуйста, заполните все обязательные поля');
+                return;
+            }
+
+            // Токен бота и ID чата (замените на свои)
+            const botToken = '7976041220:AAEJ9ZLOJwjTrTQBUX2Y2ajSPs7hHBeiXAE';
+            const chatId = '5266501584';
+
+            // Формируем сообщение
+            const message = `📌 Новая заявка:\n\n` +
+                           `👤 ФИО: ${formData.full_name}\n` +
+                           `🎂 Возраст: ${formData.age}\n` +
+                           `🇷🇺 Гражданство РФ: ${formData.citizenship}\n` +
+                           `📱 Телефон: ${formData.phone}\n` +
+                           `💼 Опыт работы: ${formData.experience}\n` +
+                           `🌍 Интересующая страна: ${formData.country}`;
+
+            // Отправляем сообщение через Telegram Bot API
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка сети');
+                return response.json();
+            })
+            .then(data => {
+                alert('Ваша заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+                document.getElementById('contact-form').reset();
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при отправке заявки. Пожалуйста, попробуйте ещё раз.');
+            });
+        });
+
         // Анимация появления при скролле
         document.addEventListener('DOMContentLoaded', function() {
             const observer = new IntersectionObserver((entries) => {
